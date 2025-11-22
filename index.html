@@ -2,66 +2,174 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>간단 사주 프로그램 V1</title>
+  <title>간단 사주 프로그램 V2</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      max-width: 480px;
+      max-width: 520px;
       margin: 40px auto;
-      padding: 0 16px;
+      padding: 0 16px 40px;
       line-height: 1.6;
+      background: #0f172a;
+      color: #e5e7eb;
     }
     h1 {
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       margin-bottom: 8px;
+    }
+    p.desc {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      margin-top: 0;
+      margin-bottom: 16px;
     }
     label {
       display: block;
-      margin: 12px 0 4px;
+      margin: 10px 0 4px;
+      font-size: 0.9rem;
     }
-    input {
+    input, select {
       width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.95rem;
+    }
+    input::placeholder {
+      color: #6b7280;
     }
     button {
-      margin-top: 16px;
+      margin-top: 18px;
       padding: 10px 14px;
       border: none;
       cursor: pointer;
-      border-radius: 6px;
-    }
-    .result {
-      margin-top: 24px;
-      padding: 16px;
       border-radius: 8px;
+      background: #22c55e;
+      color: #022c22;
+      font-weight: 600;
+      font-size: 0.95rem;
+      width: 100%;
+    }
+    button:hover {
+      filter: brightness(1.05);
+    }
+    .card {
+      margin-top: 22px;
+      padding: 16px 14px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #1f2937;
+    }
+    .card h2 {
+      font-size: 1.1rem;
+      margin: 0 0 8px;
+    }
+    .pillars {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin: 10px 0 4px;
+      font-size: 0.85rem;
+    }
+    .pillars div {
+      padding: 6px 4px;
+      text-align: center;
+      border-radius: 6px;
+      background: #0b1120;
+      border: 1px solid #1f2937;
+    }
+    .pillars span.label {
+      display: block;
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-bottom: 2px;
+    }
+    .pillars span.value {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .tag-row {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tag {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid #374151;
+      background: #020617;
+      opacity: 0.9;
+    }
+    .section-title {
+      margin-top: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .text-small {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+    .warn {
+      font-size: 0.8rem;
+      opacity: 0.75;
+      margin-top: 10px;
+    }
+    .error {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: #f97373;
     }
   </style>
 </head>
 <body>
-  <h1>간단 사주 프로그램 V1</h1>
-  <p>출생 연도를 입력하면 간지와 대략적인 오행 기운을 보여주는 간단 버전이다.</p>
+  <h1>간단 사주 프로그램 V2</h1>
+  <p class="desc">
+    양력 기준 년·월·일·시를 입력하면 간지와 오행, 기초적인 성향 해석을 보여주는 가벼운 웹 버전이다.
+    실제 상담용이 아니라 연 기준, 계절, 시간대 정도만 참고하는 맛보기용 해석이다.
+  </p>
 
   <label for="year">출생 연도 (예: 1995)</label>
   <input id="year" type="number" placeholder="예: 1995">
 
-  <button onclick="calculate()">사주 보기</button>
+  <label for="month">출생 월 (1~12)</label>
+  <input id="month" type="number" placeholder="예: 4">
 
-  <div id="result" class="result"></div>
+  <label for="day">출생 일 (1~31)</label>
+  <input id="day" type="number" placeholder="예: 5">
+
+  <label for="hour">출생 시 (0~23시, 24시간제)</label>
+  <input id="hour" type="number" placeholder="예: 13">
+
+  <label for="gender">성별 (선택)</label>
+  <select id="gender">
+    <option value="">선택 안 함</option>
+    <option value="M">남성</option>
+    <option value="F">여성</option>
+  </select>
+
+  <button onclick="calculate()">사주 간단 보기</button>
+
+  <div id="error" class="error"></div>
+  <div id="result" class="card" style="display:none;"></div>
 
   <script>
     const heavenlyStems = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
     const earthlyBranches = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"];
 
-    function getGanji(year) {
-      // 4년(갑자) 기준으로 간지 계산하는 단순식이다.
+    function getGanjiFromYear(year) {
       const stem = heavenlyStems[(year - 4) % 10];
       const branch = earthlyBranches[(year - 4) % 12];
       return stem + branch;
     }
 
     function getElementFromStem(stem) {
-      // 천간 → 오행 매핑이다.
       if (stem === "갑" || stem === "을") return "목";
       if (stem === "병" || stem === "정") return "화";
       if (stem === "무" || stem === "기") return "토";
@@ -70,46 +178,185 @@
       return "";
     }
 
+    function getSeasonFromMonth(month) {
+      if (month === 3 || month === 4 || month === 5) return "봄";
+      if (month === 6 || month === 7 || month === 8) return "여름";
+      if (month === 9 || month === 10 || month === 11) return "가을";
+      if (month === 12 || month === 1 || month === 2) return "겨울";
+      return "";
+    }
+
+    function getTimeZone(hour) {
+      if (hour >= 23 || hour < 3) return "자시(밤 늦은 시간)";
+      if (hour >= 3 && hour < 7) return "축·인시(새벽 시간)";
+      if (hour >= 7 && hour < 11) return "묘·진시(아침 시간)";
+      if (hour >= 11 && hour < 15) return "사·오시(한낮 시간)";
+      if (hour >= 15 && hour < 19) return "미·신시(오후 시간)";
+      if (hour >= 19 && hour < 23) return "유·술시(저녁 시간)";
+      return "";
+    }
+
     function getElementDescription(element) {
       if (element === "목") {
-        return "새로 시작하고 뻗어나가는 기운이 강한 편이라고 본다. 추진력, 성장, 도전과 관련된 성향이 강조되는 타입으로 볼 수 있다.";
+        return "목 기운이 강하게 깔려 있어 새로 시작하고 뻗어나가는 힘이 크게 작용하는 편이다. 성장, 도전, 확장과 인연이 많고 한 번 마음먹으면 끝까지 밀어붙이는 추진력이 특징이라고 본다.";
       }
       if (element === "화") {
-        return "열정과 표현, 속도감 있는 에너지가 강한 편이라고 본다. 감정 표현이 직설적이고, 한번 불붙으면 빠르게 움직이는 타입으로 볼 수 있다.";
+        return "화 기운이 강한 편으로 열정, 표현력, 속도감 있는 에너지가 뚜렷하다. 감정이 솔직하게 드러나고 한번 불이 붙으면 빠르게 움직이는 스타일이라 리더십과 카리스마가 살아난다고 본다.";
       }
       if (element === "토") {
-        return "안정과 책임, 현실 감각이 중요한 타입이라고 본다. 꾸준함과 신뢰를 중시하고, 기반을 다지는 성향이 강한 편이다.";
+        return "토 기운이 중심에 있어 안정과 책임, 현실 감각을 중시하는 편이다. 기반을 다지고 천천히 쌓아 올리는 힘이 강하고 믿음, 신뢰, 꾸준함이 삶의 중요한 키워드라고 본다.";
       }
       if (element === "금") {
-        return "원칙, 규칙, 정리 정돈의 기운이 강한 편이라고 본다. 냉정한 판단과 결단력, 효율을 추구하는 경향이 있다.";
+        return "금 기운이 강하게 작용해 원칙, 규칙, 정리 정돈을 중요하게 여기는 편이다. 판단이 빠르고 냉정하며 효율을 추구하는 경향이 있어 전문성, 기술, 관리 쪽에서 능력이 드러나기 쉽다고 본다.";
       }
       if (element === "수") {
-        return "유연함과 감수성, 배려의 기운이 강한 편이라고 본다. 상황을 잘 읽고 흐름을 타는 스타일로, 아이디어와 상상력도 풍부한 타입이다.";
+        return "수 기운이 바탕에 있어 유연함, 감수성, 배려심이 돋보이는 편이다. 분위기를 잘 읽고 흐름을 타는 감각이 좋으며, 상상력과 아이디어가 풍부해 기획, 예술, 상담 쪽과 인연이 깊다고 본다.";
       }
       return "오행 기운을 간단히 보기 어려운 조합이다.";
     }
 
+    function getSeasonDescription(season) {
+      if (season === "봄") {
+        return "봄에 태어난 사주는 시작, 발아, 성장의 이미지를 가진다. 새로운 일을 벌이거나 아이디어를 내는 데 강점이 있고, 주변 분위기를 따뜻하게 데우는 역할을 하게 되는 경우가 많다고 본다.";
+      }
+      if (season === "여름") {
+        return "여름에 태어난 사주는 열정, 활동성, 사람 사이의 열기를 상징한다. 대인 관계가 활발하고 바깥에서 움직이면서 힘을 쓰는 쪽으로 기운이 흐르며, 가만히 있기보다는 부딪히면서 배우는 타입이라고 본다.";
+      }
+      if (season === "가을") {
+        return "가을 사주는 정리, 수확, 판단의 이미지를 가진다. 분석력과 판단력이 좋고, 무엇이 중요한지 골라내는 감각이 있어 기획, 연구, 정리 정돈과 관련된 일에 강점을 가지는 경우가 많다고 본다.";
+      }
+      if (season === "겨울") {
+        return "겨울 사주는 집중, 내면, 저장의 기운이 강하다. 한 번 관심이 생기면 깊게 파고드는 성향이 나타나고, 혼자만의 시간에서 힘을 회복하는 편이라 전문 분야를 깊게 파고들 때 실력이 잘 쌓인다고 본다.";
+      }
+      return "";
+    }
+
+    function getTimeDescription(zone) {
+      if (!zone) return "";
+      if (zone.includes("자시")) {
+        return "자시 쪽 시간대는 내면, 사색, 감수성과 인연이 있는 시간대라서 혼자 생각하는 시간, 밤 감성, 음악·예술과 연결되기 쉽다고 본다.";
+      }
+      if (zone.includes("새벽")) {
+        return "새벽 시간대는 시작과 기도의 시간이라고도 해서, 몸은 힘들어도 마음이 예민하고 직감이 발달하는 타입으로 해석하기도 한다.";
+      }
+      if (zone.includes("아침")) {
+        return "아침 시간대는 활력과 일상 루틴과 인연이 깊다. 규칙적인 생활, 일정 관리, 하루를 일찍 여는 습관과 잘 맞는 기운이라고 본다.";
+      }
+      if (zone.includes("한낮")) {
+        return "한낮 시간대는 태양의 기운이 가장 강한 때라서 존재감, 표현력, 사회적 활동성이 강조되는 타입으로 볼 수 있다.";
+      }
+      if (zone.includes("오후")) {
+        return "오후 시간대는 정리와 마무리, 균형 감각과 관련이 깊다. 앞에서 벌어진 일들을 조율하고 마무리하는 역할을 자연스럽게 맡는 경우가 많다고 본다.";
+      }
+      if (zone.includes("저녁")) {
+        return "저녁 시간대는 인간관계, 모임, 네트워크와 인연이 깊다. 사람을 만나거나 관계를 통해 힘을 얻는 스타일로 해석하는 경우가 많다.";
+      }
+      return "";
+    }
+
     function calculate() {
       const yearInput = document.getElementById("year");
-      const resultDiv = document.getElementById("result");
-      const year = parseInt(yearInput.value, 10);
+      const monthInput = document.getElementById("month");
+      const dayInput = document.getElementById("day");
+      const hourInput = document.getElementById("hour");
+      const genderInput = document.getElementById("gender");
 
-      if (isNaN(year)) {
-        resultDiv.innerHTML = "<p>출생 연도를 정확히 입력해야 한다.</p>";
+      const resultDiv = document.getElementById("result");
+      const errorDiv = document.getElementById("error");
+      errorDiv.textContent = "";
+      resultDiv.style.display = "none";
+      resultDiv.innerHTML = "";
+
+      const year = parseInt(yearInput.value, 10);
+      const month = parseInt(monthInput.value, 10);
+      const day = parseInt(dayInput.value, 10);
+      const hour = parseInt(hourInput.value, 10);
+      const gender = genderInput.value;
+
+      if (isNaN(year) || year < 1900 || year > 2100) {
+        errorDiv.textContent = "출생 연도를 1900~2100 사이에서 정확히 입력해야 한다.";
+        return;
+      }
+      if (isNaN(month) || month < 1 || month > 12) {
+        errorDiv.textContent = "출생 월을 1~12 사이에서 정확히 입력해야 한다.";
+        return;
+      }
+      if (isNaN(day) || day < 1 || day > 31) {
+        errorDiv.textContent = "출생 일을 1~31 사이에서 대략적으로 입력해야 한다. (윤달, 음력 변환은 반영하지 않는다.)";
+        return;
+      }
+      if (isNaN(hour) || hour < 0 || hour > 23) {
+        errorDiv.textContent = "출생 시를 0~23 사이 정수로 입력해야 한다. 예: 오전 1시는 1, 오후 1시는 13.";
         return;
       }
 
-      const ganji = getGanji(year);
-      const stem = ganji[0];
-      const element = getElementFromStem(stem);
-      const desc = getElementDescription(element);
+      const yearGanji = getGanjiFromYear(year);
+      const yearStem = yearGanji[0];
+      const yearElement = getElementFromStem(yearStem);
+      const season = getSeasonFromMonth(month);
+      const timeZone = getTimeZone(hour);
 
+      const elementDesc = getElementDescription(yearElement);
+      const seasonDesc = getSeasonDescription(season);
+      const timeDesc = getTimeDescription(timeZone);
+
+      const genderText = gender === "M" ? "남성" : (gender === "F" ? "여성" : "성별 미선택");
+
+      resultDiv.style.display = "block";
       resultDiv.innerHTML = `
-        <h2>${year}년생의 기본 정보이다.</h2>
-        <p><strong>간지(연):</strong> ${ganji}년</p>
-        <p><strong>주요 오행 기운(연 기준):</strong> ${element || "알 수 없음"}</p>
-        <p>${desc}</p>
-        <p style="font-size:0.9rem; opacity:0.7;">※ 실제 사주는 월·일·시까지 함께 봐야 하며, 이 페이지는 연 기준으로만 아주 가볍게 보는 프로그램이다.</p>
+        <h2>${year}년 ${month}월 ${day}일 ${hour}시 출생 정보이다.</h2>
+
+        <div class="pillars">
+          <div>
+            <span class="label">년주(연간지)</span>
+            <span class="value">${yearGanji}년</span>
+          </div>
+          <div>
+            <span class="label">월 정보</span>
+            <span class="value">${month}월</span>
+          </div>
+          <div>
+            <span class="label">일 정보</span>
+            <span class="value">${day}일</span>
+          </div>
+          <div>
+            <span class="label">시 정보</span>
+            <span class="value">${hour}시</span>
+          </div>
+        </div>
+
+        <div class="tag-row">
+          <div class="tag">연간 오행: ${yearElement || "판단 보류"}</div>
+          <div class="tag">계절: ${season || "계절 판별 어려움"}</div>
+          <div class="tag">시간대: ${timeZone || "시간대 판별 어려움"}</div>
+          <div class="tag">성별: ${genderText}</div>
+        </div>
+
+        <div class="section-title">1. 연간(年干) 기준 기본 오행 성향</div>
+        <p class="text-small">${elementDesc}</p>
+
+        <div class="section-title">2. 태어난 계절에서 보는 분위기</div>
+        <p class="text-small">
+          ${season ? seasonDesc : "계절이 애매하게 입력되었거나 판별이 어려운 값이라 계절 해석을 간단히 넘긴다."}
+        </p>
+
+        <div class="section-title">3. 태어난 시간대에서 보는 에너지 흐름</div>
+        <p class="text-small">
+          ${timeZone ? timeZone + "에 해당하는 시간대로 본다. " + timeDesc : "시간대가 애매하게 입력되었거나 판별이 어려운 값이라 시간 해석을 간단히 넘긴다."}
+        </p>
+
+        <div class="section-title">4. 한 줄 요약</div>
+        <p class="text-small">
+          연 기준으로는 <strong>${yearElement || "특정 오행"}</strong> 기운이 바탕에 깔린 타입이고,
+          <strong>${season || "어느 계절인지 애매한 계절"}</strong>의 기운과
+          <strong>${timeZone || "특정 시간대"}</strong>의 분위기를 함께 갖고 있다고 볼 수 있다.
+          전체 사주는 월·일·시의 간지까지 정밀하게 계산해야 하지만, 이 페이지에서는 대략적인 기운의 방향과 분위기만 가볍게 확인하는 용도로 보는 것이 좋다.
+        </p>
+
+        <p class="warn">
+          ※ 실제 사주 명식은 음력/양력 변환, 절기, 월주·일주·시주 계산, 십성, 대운·세운까지 종합해서 해석해야 한다.
+          이 프로그램은 연간 오행과 계절, 시간대를 기준으로 한 간단한 참고용 해석만 제공한다.
+        </p>
       `;
     }
   </script>
