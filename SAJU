@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>간단 사주 프로그램 V1</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 480px;
+      margin: 40px auto;
+      padding: 0 16px;
+      line-height: 1.6;
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+    label {
+      display: block;
+      margin: 12px 0 4px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 16px;
+      padding: 10px 14px;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .result {
+      margin-top: 24px;
+      padding: 16px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>간단 사주 프로그램 V1</h1>
+  <p>출생 연도를 입력하면 간지와 대략적인 오행 기운을 보여주는 간단 버전이다.</p>
+
+  <label for="year">출생 연도 (예: 1995)</label>
+  <input id="year" type="number" placeholder="예: 1995">
+
+  <button onclick="calculate()">사주 보기</button>
+
+  <div id="result" class="result"></div>
+
+  <script>
+    const heavenlyStems = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
+    const earthlyBranches = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"];
+
+    function getGanji(year) {
+      // 4년(갑자) 기준으로 간지 계산하는 단순식이다.
+      const stem = heavenlyStems[(year - 4) % 10];
+      const branch = earthlyBranches[(year - 4) % 12];
+      return stem + branch;
+    }
+
+    function getElementFromStem(stem) {
+      // 천간 → 오행 매핑이다.
+      if (stem === "갑" || stem === "을") return "목";
+      if (stem === "병" || stem === "정") return "화";
+      if (stem === "무" || stem === "기") return "토";
+      if (stem === "경" || stem === "신") return "금";
+      if (stem === "임" || stem === "계") return "수";
+      return "";
+    }
+
+    function getElementDescription(element) {
+      if (element === "목") {
+        return "새로 시작하고 뻗어나가는 기운이 강한 편이라고 본다. 추진력, 성장, 도전과 관련된 성향이 강조되는 타입으로 볼 수 있다.";
+      }
+      if (element === "화") {
+        return "열정과 표현, 속도감 있는 에너지가 강한 편이라고 본다. 감정 표현이 직설적이고, 한번 불붙으면 빠르게 움직이는 타입으로 볼 수 있다.";
+      }
+      if (element === "토") {
+        return "안정과 책임, 현실 감각이 중요한 타입이라고 본다. 꾸준함과 신뢰를 중시하고, 기반을 다지는 성향이 강한 편이다.";
+      }
+      if (element === "금") {
+        return "원칙, 규칙, 정리 정돈의 기운이 강한 편이라고 본다. 냉정한 판단과 결단력, 효율을 추구하는 경향이 있다.";
+      }
+      if (element === "수") {
+        return "유연함과 감수성, 배려의 기운이 강한 편이라고 본다. 상황을 잘 읽고 흐름을 타는 스타일로, 아이디어와 상상력도 풍부한 타입이다.";
+      }
+      return "오행 기운을 간단히 보기 어려운 조합이다.";
+    }
+
+    function calculate() {
+      const yearInput = document.getElementById("year");
+      const resultDiv = document.getElementById("result");
+      const year = parseInt(yearInput.value, 10);
+
+      if (isNaN(year)) {
+        resultDiv.innerHTML = "<p>출생 연도를 정확히 입력해야 한다.</p>";
+        return;
+      }
+
+      const ganji = getGanji(year);
+      const stem = ganji[0];
+      const element = getElementFromStem(stem);
+      const desc = getElementDescription(element);
+
+      resultDiv.innerHTML = `
+        <h2>${year}년생의 기본 정보이다.</h2>
+        <p><strong>간지(연):</strong> ${ganji}년</p>
+        <p><strong>주요 오행 기운(연 기준):</strong> ${element || "알 수 없음"}</p>
+        <p>${desc}</p>
+        <p style="font-size:0.9rem; opacity:0.7;">※ 실제 사주는 월·일·시까지 함께 봐야 하며, 이 페이지는 연 기준으로만 아주 가볍게 보는 프로그램이다.</p>
+      `;
+    }
+  </script>
+</body>
+</html>
